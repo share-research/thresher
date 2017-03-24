@@ -37,7 +37,28 @@ class Thresher:
             pass
         #change back to working directory
         os.chdir(working_directory)
-        print('---done writing file---')
+        print('---done writing manifest file---')
+
+    def write_json_file(self,directory,filename,text):
+        print('---begin writing json file---')
+
+        #if directory exists just catch error
+        try:
+            os.mkdir(directory)
+        except:
+            pass
+
+        #get current directory
+        working_directory = os.getcwd()
+        try :
+            os.chdir(directory)
+            with open(filename, 'w') as outfile:
+                json.dump(text, outfile)
+        except:
+            pass
+        #change back to working directory
+        os.chdir(working_directory)
+        print('---done writing json file---')
 
     def prepare_link_data(self,links):
         #converts link hash to list of dictionaries with content-type and mime-type as keys
@@ -59,6 +80,12 @@ class Thresher:
     def download_content_file(self,dir_name,url):
         working_directory = os.getcwd()
         filename = None
+        
+        #if directory exists just catch error
+        try:
+            os.mkdir(dir_name)
+        except:
+            pass
 
         try:
             os.chdir(dir_name)
@@ -81,7 +108,7 @@ PROD_SHARE_API= 'https://share.osf.io/api/v2/search/creativeworks/_search'
 
 search_url = furl.furl(PROD_SHARE_API)
 
-search_url.args['size'] = 2
+search_url.args['size'] = 5
 #recent_results = requests.get(search_url.url).json()
 
 query_share = QueryShare()
@@ -129,19 +156,22 @@ for result in records:
                     content_filename = None
                     try:
                         print("downloading file from: ", link['content-link'])
-                        print("here2")
                         content_filename = thresh.download_content_file(identifier_directory,link['content-link'])
                         print("downloaded file: ", content_filename)
                     except:
                         content_filename = None
+                    
                     if content_filename is None:
                         content_filename = "Failed to download"
+                    
                     link['filename'] = content_filename
                     downloaded_link_list.append(link)
 
                 thresh.create_manifest(identifier_directory,filename,downloaded_link_list)
-                    
-
+                thresh.write_json_file(identifier_directory,identifier_directory+".json",result)
+                #write json file
+                
+#TODO write JSON SHARE record to directory
 
 #could use python wget module, but will just call wget at command line for now
 #create folder for the record
