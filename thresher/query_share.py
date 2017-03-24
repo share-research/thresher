@@ -6,6 +6,7 @@ import furl
 class QueryShare:
 ##supply query
 ##maybe move to another class
+##TODO un-hard-code Notre Dame
 ##TODO add alias list
 ## TODO parameterize as filters of parameters like: funders, source, title, etc
     def generate_institution_query(self):
@@ -34,6 +35,7 @@ class QueryShare:
             }
         return affiliation_query
 
+    ## Returns SHARE records as JSON objects give the supplied query
     def query_share(self, url, query):
         # A helper function that will use the requests library,
         # pass along the correct headers,

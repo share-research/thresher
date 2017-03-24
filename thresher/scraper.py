@@ -37,7 +37,7 @@ class Scraper:
     
 
 
-    #Returns a list of content url's and their mime/types from a given html page
+    #Returns a dictionary of content url's and their mime/types from a given html page
     #That are not of mime-type 'text/html'
     def get_content_urls_from_html_page(self, url):
         print("starting get content links")
