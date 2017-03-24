@@ -4,6 +4,7 @@ import furl
 import csv
 import os
 from slugify import slugify
+import wget
 
 ### Possibly convert this to docopt script in the future
 ###
@@ -43,7 +44,7 @@ class Thresher:
         link_list = []
         for link in links:
             link_dict = {}
-            link_dict['content-type'] = link
+            link_dict['content-link'] = link
             link_dict['mime-type'] = links[link]
             link_list.append(link_dict)
         return link_list
@@ -54,6 +55,20 @@ class Thresher:
             os.mkdir(dir_name)
         except:
             pass
+
+    def download_content_file(self,dir_name,url):
+        working_directory = os.getcwd()
+        filename = None
+
+        try:
+            os.chdir(dir_name)
+            filename = wget.download(url)
+        except:
+            pass
+        
+        #reset directory
+        os.chdir(working_directory)
+        return filename
 
     def thresher(self):
         return
@@ -74,15 +89,6 @@ query_share = QueryShare()
 affiliation_query = query_share.generate_institution_query();
 affiliation_results = query_share.query_share(search_url.url, affiliation_query)
 records = affiliation_results['hits']['hits']
-
-#for row in records:
-#    if i == 0:
-#        fieldnames = row['_source'].keys()
-#        print(fieldnames);
-        #            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
-#            writer.writeheader()
-#        i = i + 1
-#        writer.writerow(row['_source'])    
 
 print('The request URL is {}'.format(search_url.url))
 print('----------')
@@ -112,13 +118,31 @@ for result in records:
             links = scrape.get_content_urls_from_html_page(identifier)
             print("Links Found are: ", links)
             
-    if links:
-        link_list = thresh.prepare_link_data(links)
-        #filename = thresh.generate_url_file_name(identifier)
-        directory = slugify(identifier)
-        filename = directory + ".csv"
-        thresh.create_manifest(directory,filename,link_list)
-        
+            if links:
+                link_list = thresh.prepare_link_data(links)
+                identifier_directory = slugify(identifier)
+                filename = identifier_directory + ".csv"
+                
+                downloaded_link_list = []
+                
+                for link in link_list:
+                    content_filename = None
+                    try:
+                        print("downloading file from: ", link['content-link'])
+                        print("here2")
+                        content_filename = thresh.download_content_file(identifier_directory,link['content-link'])
+                        print("downloaded file: ", content_filename)
+                    except:
+                        content_filename = None
+                    if content_filename is None:
+                        content_filename = "Failed to download"
+                    link['filename'] = content_filename
+                    downloaded_link_list.append(link)
+
+                thresh.create_manifest(identifier_directory,filename,downloaded_link_list)
+                    
+
+
 #could use python wget module, but will just call wget at command line for now
 #create folder for the record
 #write out the json record file

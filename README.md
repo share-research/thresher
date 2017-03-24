@@ -6,6 +6,9 @@ Install Dependendencies
 
 -Python 3.5
 
+- Python wget library
+pip install wget
+
 -Slugify
 pip install python-slugify
 
