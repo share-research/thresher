@@ -40,7 +40,7 @@ class Thresher:
         print('---done writing manifest file---')
 
     def write_json_file(self,directory,filename,text):
-        print('---begin writing json file---')
+        print('---begin writing json metadata file---')
 
         #if directory exists just catch error
         try:
@@ -58,7 +58,7 @@ class Thresher:
             pass
         #change back to working directory
         os.chdir(working_directory)
-        print('---done writing json file---')
+        print('---done writing json metadata file---')
 
     def prepare_link_data(self,links):
         #converts link hash to list of dictionaries with content-type and mime-type as keys
@@ -108,7 +108,7 @@ PROD_SHARE_API= 'https://share.osf.io/api/v2/search/creativeworks/_search'
 
 search_url = furl.furl(PROD_SHARE_API)
 
-search_url.args['size'] = 5
+search_url.args['size'] = 20
 #recent_results = requests.get(search_url.url).json()
 
 query_share = QueryShare()
@@ -142,7 +142,7 @@ for result in records:
     for identifier in result['_source']['identifiers']:
         if "http" in identifier:
             print ("Getting links for identifer: ", identifier)
-            links = scrape.get_content_urls_from_html_page(identifier)
+            links = scrape.get_content_urls_from_html_page(identifier,"curate.nd.edu")
             print("Links Found are: ", links)
             
             if links:
@@ -157,7 +157,7 @@ for result in records:
                     try:
                         print("downloading file from: ", link['content-link'])
                         content_filename = thresh.download_content_file(identifier_directory,link['content-link'])
-                        print("downloaded file: ", content_filename)
+                        print(" downloaded file: ", content_filename)
                     except:
                         content_filename = None
                     

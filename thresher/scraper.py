@@ -39,51 +39,57 @@ class Scraper:
 
     #Returns a dictionary of content url's and their mime/types from a given html page
     #That are not of mime-type 'text/html'
-    def get_content_urls_from_html_page(self, url):
+    def get_content_urls_from_html_page(self, url, exclude_domain):
         print("starting get content links")
         page_url = furl.furl(url)
         response = requests.get(page_url.url, stream=True)
 
+        #get url domain after redirect
+        root_url = self.get_root_url(response.url)
+
         print("getting mime-type for first link")
         #first check to see if content type is html
         mime_type = response.headers.get('content-type')
-
-        #create dictionary (hash) for links and content
-        content_links = {}
         
-        if "text/html" in mime_type:
-            #get url domain after redirect
-            root_url = self.get_root_url(response.url)
+        #create dictionary (hash) for links and content        
+        content_links = {}
 
-            soup = BeautifulSoup(response.text, "html.parser")
-
-            #TODO ignore CSS files (add an ignore extension list)
-            #TODO add an ignore MIME/TYPE list (configurable parameter file)
-
-            print("starting for loop")
-            for a in soup.find_all('a', href=True):
-                print("iteration")
-                href = a['href']
-
-                if not href.startswith("http"):
-                    full_url = root_url + href
-                else:
-                    full_url = href
-
-                #only if not already found on page
-                content_url = furl.furl(full_url)
-
-                if content_url.url not in content_links:
-                    mime_type = self.get_mime_type(full_url)
-                    if mime_type is not None:
-                        if "text/html" not in mime_type:
-                            print("Found content link:", content_url, " MIME-TYPE: ", mime_type)
-                            content_links[content_url.url] = mime_type
-                    else:
-                        print("Found invalid URL:", content_url)
+        if exclude_domain in root_url:
+            print("Skipping record in domain: ", exclude_domain);
         else:
-            #just return first page if not html
-            content_links[page_url.url] = mime_type
+            if "text/html" in mime_type:
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                #TODO ignore CSS files (add an ignore extension list)
+                #TODO add an ignore MIME/TYPE list (configurable parameter file)
+
+                print("starting for loop")
+                for a in soup.find_all('a', href=True):
+                    #print("iteration")
+                    href = a['href']
+
+                    if not href.startswith("http"):
+                        full_url = root_url + href
+                    else:
+                        full_url = href
+
+                    #only if not already found on page
+                    content_url = furl.furl(full_url)
+
+                    if exclude_domain in content_url.url:
+                        print("Skipping record in domain: ", exclude_domain);
+                    else:
+                        if content_url.url not in content_links:
+                            mime_type = self.get_mime_type(full_url)
+                            if mime_type is not None:
+                                if "text/html" not in mime_type:
+                                    print("Found content link:", content_url, " MIME-TYPE: ", mime_type)
+                                    content_links[content_url.url] = mime_type
+                            else:
+                                print("Found invalid URL:", content_url)
+            else:
+                #just return first page if not html
+                content_links[page_url.url] = mime_type
             
         if not content_links:
             #if no links found just return first page
