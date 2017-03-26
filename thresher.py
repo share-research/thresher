@@ -54,10 +54,6 @@ class Thresher:
         try :
             os.chdir(directory)
             with open(filename, 'w') as outfile:
-                #print("writing json ", json_obj)
-                #json_str = json.dumps(json_obj)
-                #outfile.write(json_str)
-                #print ("json str is", json_str)
                 json.dump(json_obj, outfile, ensure_ascii=False)
             outfile.close()
         except Exception as inst:
@@ -177,7 +173,6 @@ for result in records:
                     downloaded_link_list.append(link)
 
                 thresh.create_manifest(identifier_directory,filename,downloaded_link_list)
-                print ("json is ", result['_source'])
                 thresh.write_json_file(identifier_directory,identifier_directory+".json",result['_source'])
                 #write json file
                 
