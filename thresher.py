@@ -5,6 +5,7 @@ import csv
 import os
 from slugify import slugify
 import wget
+import json
 
 ### Possibly convert this to docopt script in the future
 ###
@@ -39,7 +40,7 @@ class Thresher:
         os.chdir(working_directory)
         print('---done writing manifest file---')
 
-    def write_json_file(self,directory,filename,text):
+    def write_json_file(self,directory,filename,json_obj):
         print('---begin writing json metadata file---')
 
         #if directory exists just catch error
@@ -53,8 +54,14 @@ class Thresher:
         try :
             os.chdir(directory)
             with open(filename, 'w') as outfile:
-                json.dump(text, outfile)
-        except:
+                #print("writing json ", json_obj)
+                #json_str = json.dumps(json_obj)
+                #outfile.write(json_str)
+                #print ("json str is", json_str)
+                json.dump(json_obj, outfile, ensure_ascii=False)
+            outfile.close()
+        except Exception as inst:
+            print("had exception on write to json: ", inst)
             pass
         #change back to working directory
         os.chdir(working_directory)
@@ -90,7 +97,8 @@ class Thresher:
         try:
             os.chdir(dir_name)
             filename = wget.download(url)
-        except:
+        except Exception as inst:
+            print("had exception on wget: ", inst)
             pass
         
         #reset directory
@@ -138,6 +146,7 @@ for result in records:
             result['_source']['identifiers']
         )
     )
+    title = result['_source']['title'];
     links = {}
     for identifier in result['_source']['identifiers']:
         if "http" in identifier:
@@ -147,7 +156,7 @@ for result in records:
             
             if links:
                 link_list = thresh.prepare_link_data(links)
-                identifier_directory = slugify(identifier)
+                identifier_directory = slugify(title + "_" + identifier)
                 filename = identifier_directory + ".csv"
                 
                 downloaded_link_list = []
@@ -168,7 +177,8 @@ for result in records:
                     downloaded_link_list.append(link)
 
                 thresh.create_manifest(identifier_directory,filename,downloaded_link_list)
-                thresh.write_json_file(identifier_directory,identifier_directory+".json",result)
+                print ("json is ", result['_source'])
+                thresh.write_json_file(identifier_directory,identifier_directory+".json",result['_source'])
                 #write json file
                 
 #TODO write JSON SHARE record to directory
